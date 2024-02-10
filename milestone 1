@@ -1,0 +1,227 @@
+//Name: shubhdeep kaur
+//Section: NBB
+//Id: 172915217
+//Email: shubhdeep-kaur2@myseneca.ca
+
+#include <iostream>
+#include <iomanip>
+#include <cstring>
+#include <fstream>
+#include <string>
+#include <occi.h>
+using oracle::occi::Environment;
+using oracle::occi::Connection;
+using namespace oracle::occi;
+using namespace std;
+
+
+struct Students
+{
+	int StudentID;
+	string lastname;
+	string firstname;
+	string dateofbirth;
+	string major;
+};
+
+//displays the menu
+int menu(void);
+
+int findStudents(Connection* conn, int StudentID);
+void displayStudents(Connection* conn, struct Students stu);
+void displayAllStudents(Connection* conn);
+
+int main()
+{
+
+	Environment* env = nullptr;
+	Connection* conn = nullptr;
+	Students stu;
+	// User Variables
+	string str;
+	string usr = "dbs211_231nbb33";
+	string pass = "10522382";
+	string srv = "myoracle12c.senecacollege.ca:1521/oracle12c";
+
+	try {
+		env = Environment::createEnvironment(Environment::DEFAULT);
+		conn = env->createConnection(usr, pass, srv);
+		cout << "Connection is Successful!" << endl;
+		cout << "Group - 6 Members: Harmandeep Singh, Gayatri Sharma, Shubdeep Sidhu" << endl;
+		cout << "Individual Work : Shubhdeep Kaur" << endl;
+		cout << "Project Milestone 2" << endl;
+
+
+		int input = 0;
+
+		do {
+			input = menu();
+			if (input == 1) {
+				cout << "\n Entering choice to find Students";
+				int stno;
+				cout << "\nEnter Students ID:";
+				cin >> stno;
+				if (findStudents(conn, stno) == 1)
+				{
+					cout << "\nValid Students ID\n";
+				}
+				else
+				{
+					cout << "\nInvalid Students ID\n";
+				}
+			}
+			else if (input == 2)
+			{
+				cout << "\nEntering choice to display a Students";
+				displayStudents(conn, stu);
+			}
+			else if (input == 3)
+			{
+				cout << "\nEntering choice to display all Students";
+				displayAllStudents(conn);
+
+			}
+
+		} while (input != 4);
+
+		env->terminateConnection(conn);
+		Environment::terminateEnvironment(env);
+
+	}
+
+	catch (SQLException& sqlExcp) {
+		cout << sqlExcp.getErrorCode() << ": " << sqlExcp.getMessage();
+	}
+	return 0;
+}
+
+//function definitions
+
+//1 int menu(void);
+
+int menu(void)
+{
+	int input = 0;
+	cout << "\n**************************\n";
+	cout << "HR MENU\n";
+	cout << "**************************\n";
+	cout << "\n1. Find Students";
+	cout << "\n2. Students Report";
+	cout << "\n3. Display All Students";
+	cout << "\n4. EXIT\n";
+	cout << "\n**************************\n";
+	cout << "Enter your choice: ";
+	cin >> input;
+
+	return input;
+
+}
+
+//2 int findGuest(Connection* conn, int StudentID);
+int findStudents(Connection* conn, int StudentID)
+{
+	Statement* stmt = conn->createStatement();
+	ResultSet* rs = stmt->executeQuery("SELECT STUDENTID, FIRSTNAME, LASTNAME, DATEOFBIRTH , MAJOR FROM STUDENTS WHERE STUDENTID = " + to_string(StudentID));
+	if (rs->next()) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+
+}
+
+//3 void displayGuest(Connection * conn, struct Students gst);
+
+void displayStudents(Connection* conn, struct Students stu)
+{
+	int StudentID;
+	bool correctCode = false;
+	do {
+		cout << "\nEnter StudentID: ";
+		cin >> StudentID;
+		if (!cin || findStudents(conn, StudentID) != 1)
+		{
+			correctCode = false;
+			cin.clear();
+			cin.ignore(1000, '\n');
+			cout << "\nInvalid StudentID\n";
+		}
+
+		else {
+			correctCode = true;
+			cout << "\nValid Input" << endl;
+			cout << "\nSearch in table..!!" << endl;
+			try {
+				Statement* stmt2 = conn->createStatement("SELECT STUDENTID, FIRSTNAME, LASTNAME, DATEOFBIRTH , MAJOR FROM STUDENTS WHERE STUDENTID = " + to_string(StudentID));
+				ResultSet* rs2 = stmt2->executeQuery();
+				while (rs2->next())
+				{
+					cout << "\n--------------- Students Information -------------- - " << endl;
+					stu.StudentID = rs2->getInt(1);
+					stu.firstname = rs2->getString(2);
+					stu.lastname = rs2->getString(3);
+					stu.major = rs2->getString(4);
+					stu.dateofbirth = rs2->getString(5);
+					cout << "\nStudents ID Number: ";
+					cout << stu.StudentID;
+					cout << "\nFirstName: ";
+					cout << stu.firstname;
+					cout << "\nLastName: ";
+					cout << stu.lastname;
+					cout << "\nDate of Birth: ";
+					cout << stu.dateofbirth;
+					cout << "\nMajor: ";
+					cout << stu.major;
+				}
+				cout << endl;
+				conn->terminateStatement(stmt2);
+			}
+			catch (SQLException& sqlExcp)
+			{
+				cout << sqlExcp.getErrorCode() << ": " << sqlExcp.getMessage();
+			}
+		}
+
+	} while (!correctCode);
+
+}
+
+
+//4 void displayAllStudents(Connection * conn);
+
+void displayAllStudents(Connection* conn)
+{
+	try {
+		Statement* stmt3 = conn->createStatement();
+		ResultSet* rs3 = stmt3->executeQuery("SELECT STUDENTID, FIRSTNAME, LASTNAME, DATEOFBIRTH , MAJOR FROM STUDENTS");
+		cout << setw(25) << "\n\nSTUDENTID" << setw(20) << "FIRSTNAME" << setw(20) << "LASTNAME" << setw(17) << "DATEOFBIRTH" << setw(17) << "MAJOR" << endl;
+		Students stu2;
+		while (rs3->next()) {
+			stu2.StudentID = rs3->getInt(1);
+			stu2.firstname = rs3->getString(2);
+			stu2.lastname = rs3->getString(3);
+			stu2.dateofbirth = rs3->getString(4);
+			stu2.major = rs3->getString(5);
+
+			cout << left << setw(25);
+			cout << stu2.StudentID;
+			cout << left << setw(23);
+			cout << stu2.firstname;
+			cout << left << setw(18);
+
+			cout << stu2.lastname;
+			cout << left << setw(12);
+			cout << stu2.dateofbirth;
+			cout << left << setw(12);
+			cout << stu2.major;
+			cout << left << setw(12);
+			cout << endl;
+		}
+		cout << endl;
+		conn->terminateStatement(stmt3);
+	}
+	catch (SQLException& sqlExcp) {
+		cout << sqlExcp.getErrorCode() << ": " << sqlExcp.getMessage();
+	}
+}
